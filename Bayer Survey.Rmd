@@ -416,6 +416,7 @@ kruskal.test(Q9_3 ~ Q8, survey)
 
 ```
 
+
 # What is the major cause of P water pollution? Q17 
 ```{r}
 

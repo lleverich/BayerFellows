@@ -1,0 +1,156 @@
+---
+title: "Untitled"
+author: "Sara Tirado"
+date: "9/16/2019"
+output: html_document
+---
+
+````{r, warning= FALSE, message=FALSE, echo=FALSE}
+library(tidyr)
+library(gplots)
+library(reshape2)
+library(ggplot2)
+library(plotly)
+library(plyr)
+library(gridExtra)
+library(dplyr)
+
+Survey <- read.delim2("~/Desktop/Survey2019.txt", comment.char="#")
+Survey_filtered <- Survey[2:231,]
+Survey_filtered$Q12 <- as.factor(Survey_filtered$Q12)
+s <-summary (Survey_filtered$Q12 )
+
+Q12_counts <- as.data.frame(cbind(Number = names(s),Freq = s), stringsAsFactors=F, row.names = 1:length(s))
+Q12_counts <- Q12_counts[2:12,]
+Q12_counts$Number <- factor(Q12_counts$Number, levels = c("1", "2", "3", "4", "5", "6", "7", "8", "9", "10"))
+
+Survey_filtered$Q12 <- as.character(Survey_filtered$Q12 )
+Survey_filtered$Q12 <- factor(Survey_filtered$Q12 , levels = c("1", "2", "3", "4", "5", "6", "7", "8", "9", "10"))
+
+ggplot(Survey_filtered , aes(x= Q12, color = Q2, fill = Q2)) +
+  geom_bar() +
+   #scale_color_manual(values=c('dodgerblue2'))+
+   #ylab("Percent RTLDG") +
+   #xlab("Percent Change in UAV Height") +
+   theme(plot.title = element_text(hjust = 0.5, size = 15),
+          axis.text=element_text(size=13, colour = "black"),
+          axis.title=element_text(size=14),
+          legend.text = element_text(size=14, colour = "black")) 
+
+ggplot(Survey_filtered , aes(x= Q12, color = Q5, fill = Q5)) +
+  geom_bar() +
+   #scale_color_manual(values=c('dodgerblue2'))+
+   #ylab("Percent RTLDG") +
+   #xlab("Percent Change in UAV Height") +
+   theme(plot.title = element_text(hjust = 0.5, size = 15),
+          axis.text=element_text(size=13, colour = "black"),
+          axis.title=element_text(size=14),
+          legend.text = element_text(size=14, colour = "black")) 
+
+ggplot(Survey_filtered , aes(x= Q12, color = Q8, fill = Q8)) +
+  geom_bar() +
+   #scale_color_manual(values=c('dodgerblue2'))+
+   #ylab("Percent RTLDG") +
+   #xlab("Percent Change in UAV Height") +
+   theme(plot.title = element_text(hjust = 0.5, size = 15),
+          axis.text=element_text(size=13, colour = "black"),
+          axis.title=element_text(size=14),
+          legend.text = element_text(size=14, colour = "black")) 
+
+ggplot(Survey_filtered , aes(x= Q12, color = Q6, fill = Q6)) +
+  geom_bar() +
+   #scale_color_manual(values=c('dodgerblue2'))+
+   #ylab("Percent RTLDG") +
+   #xlab("Percent Change in UAV Height") +
+   theme(plot.title = element_text(hjust = 0.5, size = 15),
+          axis.text=element_text(size=13, colour = "black"),
+          axis.title=element_text(size=14),
+          legend.text = element_text(size=14, colour = "black")) 
+
+
+```
+
+````{r, warning= FALSE, message=FALSE, echo=FALSE}
+
+ggplot(Survey_filtered , aes(x= Q13, color = 'dodgerblue2')) +
+  geom_bar(color = 'dodgerblue2', fill = 'dodgerblue2') +
+   scale_color_manual(values=c('dodgerblue2'))+
+   #ylab("Percent RTLDG") +
+   #xlab("Percent Change in UAV Height") +
+   theme(plot.title = element_text(hjust = 0.5, size = 13),
+          axis.title=element_text(size=13),
+          legend.text = element_text(size=13, colour = "black"),
+          axis.text.x = element_text(size=13, colour="black", angle=-45, hjust=0.4, vjust=0.2, margin = margin(1,1,1,1))) 
+
+
+ggplot(Survey_filtered , aes(x= Q13, color = Q2, fill = Q2)) +
+  geom_bar() +
+    theme(plot.title = element_text(hjust = 0.5, size = 13),
+          axis.title=element_text(size=13),
+          legend.text = element_text(size=13, colour = "black"),
+          axis.text.x = element_text(size=13, colour="black", angle=-45, hjust=0.4, vjust=0.2, margin = margin(1,1,1,1))) 
+
+
+ggplot(Survey_filtered , aes(x= Q13, color = Q5, fill = Q5)) +
+  geom_bar() +
+    theme(plot.title = element_text(hjust = 0.5, size = 13),
+          axis.title=element_text(size=13),
+          legend.text = element_text(size=13, colour = "black"),
+          axis.text.x = element_text(size=13, colour="black", angle=-45, hjust=0.4, vjust=0.2, margin = margin(1,1,1,1))) 
+
+
+ggplot(Survey_filtered , aes(x= Q13, color = Q8, fill = Q8)) +
+  geom_bar() +
+    theme(plot.title = element_text(hjust = 0.5, size = 13),
+          axis.title=element_text(size=13),
+          legend.text = element_text(size=13, colour = "black"),
+          axis.text.x = element_text(size=13, colour="black", angle=-45, hjust=0.4, vjust=0.2, margin = margin(1,1,1,1))) 
+
+
+ggplot(Survey_filtered , aes(x= Q13, color = Q6, fill = Q6)) +
+  geom_bar() +
+    theme(plot.title = element_text(hjust = 0.5, size = 13),
+          axis.title=element_text(size=13),
+          legend.text = element_text(size=13, colour = "black"),
+          axis.text.x = element_text(size=13, colour="black", angle=-45, hjust=0.4, vjust=0.2, margin = margin(1,1,1,1))) 
+
+
+
+
+
+
+```
+```{r}
+Survey_filtered$Q14_1 <- factor(Survey_filtered$Q14_1 , levels = c("1", "2", "3", "4", "5", "6", "7", "8", "9", "10"))
+
+ggplot(Survey_filtered , aes(x= Q14_1, color = Q2, fill = Q2)) +
+  geom_bar() +
+    theme(plot.title = element_text(hjust = 0.5, size = 13),
+          axis.title=element_text(size=13),
+          legend.text = element_text(size=13, colour = "black"),
+          axis.text.x = element_text(size=13, colour="black", angle=-45, hjust=0.4, vjust=0.2, margin = margin(1,1,1,1))) 
+
+ggplot(Survey_filtered , aes(x= Q14_1, color = Q5, fill = Q5)) +
+  geom_bar() +
+    theme(plot.title = element_text(hjust = 0.5, size = 13),
+          axis.title=element_text(size=13),
+          legend.text = element_text(size=13, colour = "black"),
+          axis.text.x = element_text(size=13, colour="black", angle=-45, hjust=0.4, vjust=0.2, margin = margin(1,1,1,1))) 
+
+ggplot(Survey_filtered , aes(x= Q14_1, color = Q8, fill = Q8)) +
+  geom_bar() +
+    theme(plot.title = element_text(hjust = 0.5, size = 13),
+          axis.title=element_text(size=13),
+          legend.text = element_text(size=13, colour = "black"),
+          axis.text.x = element_text(size=13, colour="black", angle=-45, hjust=0.4, vjust=0.2, margin = margin(1,1,1,1))) 
+
+ggplot(Survey_filtered , aes(x= Q14_1, color = Q6, fill = Q6)) +
+  geom_bar() +
+    theme(plot.title = element_text(hjust = 0.5, size = 13),
+          axis.title=element_text(size=13),
+          legend.text = element_text(size=13, colour = "black"),
+          axis.text.x = element_text(size=13, colour="black", angle=-45, hjust=0.4, vjust=0.2, margin = margin(1,1,1,1))) 
+
+
+```
+
