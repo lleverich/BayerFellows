@@ -1,0 +1,508 @@
+---
+title: "Untitled"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(stringr)
+library(FSA)
+```
+
+
+```{r}
+survey <- read.csv("C:/Users/lmlev/iCloudDrive/UMN/Bayer Fellowship/FinalDataFile_Survey_R.csv")
+```
+
+Source of information
+```{r}
+
+# Overview 
+info_source <- survey %>% 
+  drop_na(Q19) %>%
+  group_by(Q8 , Q19 ) %>%
+  summarize(count = n())
+info_source
+
+
+
+info <- spread(info_source, Q8, count)
+
+ggplot(info_source, aes(Q19, count, fill = Q8)) + geom_bar(stat = 'identity', position = "dodge")
+
+# Rural 
+rural_N <- count(survey, Q8 == "Rural")[2, 2]
+
+news_rural <- survey %>%
+  subset(Q8 == "Rural") %>%
+  group_by(Q19) %>%
+  summarise(n = n(), 
+            perc = n/rural_N*100)
+news_rural
+
+#Suburban
+suburban_N <- count(survey, Q8 == "Suburban")[2, 2]
+
+news_suburban <- survey %>%
+  subset(Q8 == "Suburban") %>%
+  group_by(Q19) %>%
+  summarise(n = n(), 
+            perc = n/suburban_N*100)
+news_suburban
+
+#Urban 
+
+urban_N <- count(survey, Q8 == "Urban")[2, 2]
+
+news_urban <- survey %>%
+  subset(Q8 == "Urban") %>%
+  group_by(Q19) %>%
+  summarise(n = n(), 
+            perc = n/urban_N*100)
+news_urban
+
+
+```
+
+General Knowledge vs Actual Knowledge Ranking
+```{r}
+# Question 13 Knowledge
+know <- survey %>% 
+  drop_na(Q14_1) %>%
+  group_by(Q14_1 , Q13 ) %>%
+  summarize(count = n())
+know
+
+ggplot(know, aes(Q14_1, count, fill = Q13)) + geom_bar(stat = 'identity', position = "dodge")
+
+# Question 17 Knowledge
+know2 <- survey %>% 
+  drop_na(Q14_1) %>%
+  group_by(Q14_1 , Q17 ) %>%
+  summarize(count = n())
+know2
+
+ggplot(know2, aes(Q14_1, count, fill = Q17)) + geom_bar(stat = 'identity', position = "dodge")
+
+# Question 13 and 17 summary
+# Summary of knowledge including the knowledge questions and also the participants ranking of their own knowledge 
+know3 <- survey %>% 
+  drop_na(Q14_1) %>%
+  group_by(Q14_1 , Q17 , Q13) %>%
+  summarize(count = n())
+know3
+
+# Create empty columns to assign knowledge level (high, mod, low)
+know3$know1 <- NA
+know3$know2 <- NA
+
+# assign knowledge level for Q13
+for (i in 1:nrow(know3)){
+  if ((str_detect(know3$Q13[i], "Phosphorus"))){
+    know3$know1[i] <- as.numeric(1)
+  } else {
+    know3$know1[i] <- as.numeric(0)
+  }
+}
+
+# assign knowledge level for Q17
+for (i in 1:nrow(know3)){
+  if ((str_detect(know3$Q17[i], "Erosion"))){
+    know3$know2[i] <- as.numeric(1)}
+  else if ((str_detect(know3$Q17[i], "Cropland runoff"))){
+      know3$know2[i] <- as.numeric(1)}
+  else {
+    know3$know2[i] <- as.numeric(0)}
+}
+
+# Knowledge for participants split into three levels: 0, 1, and 2 
+know3$knowledge <- as.numeric(know3$know1 + know3$know2)
+
+
+# FINAL SUMMARY of knowledge level in comparison to claimed knowledge level 
+know4 <- know3 %>% 
+  group_by(Q14_1 , knowledge) %>%
+  summarize(total = sum(count))
+know4
+
+# How many participants with previous knowledge 
+# 35 with knowledge, 201 with some knowledge, and 328 with no knowledge 
+know5 <- know3 %>% 
+  group_by(knowledge) %>%
+  summarize(total = sum(count))
+know5
+
+# How did participants rank their knowledge level (0-1) (2-3) (4-5)
+# 47 high knowledge, 202 with moderate knowledge, 315 little knowledge 
+know6 <- know3 %>% 
+  group_by(Q14_1) %>%
+  summarize(total = sum(count))
+know6
+
+
+# Graphing the knowledge levels 
+know4$Q14_1 <- as.factor(know4$Q14_1)
+know4$knowledge <- as.factor(know4$knowledge)
+
+library(plyr)
+library(plyr)
+know4$knowledge <- mapvalues(know4$knowledge, from = c(0,1, 2), to = c("No Previous Knowledge", "Some Previous Knowledge", "Previous Knowledge"))
+
+
+# FIGURE 1. Knowledge comparison among participants 
+ggplot(know4, aes(Q14_1, total, fill = knowledge)) + 
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(x = "Knowledge Rank by Participant", 
+       fill = "Actual Knowledge Level", 
+       y = "Responses") 
+
+# Run next block before these 
+# kruskal.test(Q14_1~knowledge, survey)
+# dunnTest(Q14_1~knowledge, survey)
+
+
+```
+
+# Label knowledge level in the survey data 
+```{r}
+# Create empty columns to assign knowledge level (high, mod, low)
+survey$know1 <- NA
+survey$know2 <- NA
+
+# assign knowledge level for Q13
+for (i in 1:nrow(survey)){
+  if ((str_detect(survey$Q13[i], "Phosphorus"))){
+    survey$know1[i] <- as.numeric(1)
+  } else {
+    survey$know1[i] <- as.numeric(0)
+  }
+}
+
+survey$know2 <- as.numeric(0)
+
+# assign knowledge level for Q17
+for (i in 1:nrow(survey)){
+  if (str_detect(survey$Q17[i], "Erosion|Cropland runoff")){
+    survey$know2[i] <- as.numeric(1)}
+  else {
+    survey$know2[i] <- as.numeric(0)
+  }
+}
+
+# Knowledge for participants split into three levels: 0, 1, and 2 
+survey$knowledge <- as.numeric(survey$know1 + survey$know2)
+survey$know <- as.factor(survey$knowledge)
+
+
+low_know <- survey %>%
+  filter(knowledge == 0) %>%
+  summarise(count = n())
+low_know
+# 351 with no knowledge, 59% 
+
+
+```
+
+Is knowledge difference between rural, suburban and urban populations.
+Yes, there is significant differences between the rural and suburban populations (not with urban)
+```{r}
+# Is knowledge level influenced by rural, urban, suburban background?
+kruskal.test(knowledge~Q8, data = survey)
+
+#perform Dunn's Test with Bonferroni correction for p-values
+dunnTest(knowledge ~ Q8,
+         data=survey,
+         method="bonferroni")
+
+
+# Plot for knowledge by rural/urban
+ggplot(survey, aes(know, fill = Q8)) + geom_bar(position = "dodge")
+# Plot shows that across urban, suburban and urban poplutions the most common knowledge class was 0, followed by 1 then 2. Same pattern for all.
+```
+
+# Knowledge Comparison by industry, are members of the ag industry more knowledgeable? 
+Yes, statistical difference between industry knowledge and consumer knowledge 
+```{r}
+# assign knowledge level for Q17
+for (i in 1:nrow(survey)){
+  if (survey$Q20[i] == c("Consumer")){
+    survey$Background[i] <- as.character("NoAg")}
+  else {
+    survey$Background[i] <- as.character("Ag")
+  }
+}
+
+count(survey$Q20 == c("Consumer"))
+# 114 other, 483 just consumers 
+
+library(dplyr)
+detach(package:plyr, unload=TRUE)
+
+backgroundsum <- survey %>%
+  group_by(knowledge, Background) %>%
+  summarise(count = n())
+backgroundsum
+# Ag Knowledge ranking: 0 knowledge: 49% Ag, 1: 40%, 2:11% 
+# No Ag Knowledge: 0 knowledge: 61%, 1: 34%, 2: 5%
+# Ag background did translate to greater knowledge, test with non parametric test 
+
+# Knowledge by association
+ggplot(survey, aes(knowledge, fill = Background)) + geom_bar(position = "dodge")
+
+# library(ggpubr)
+# ggboxplot(survey, y = knowledge, x = Background)
+
+# survey$Background <- as.factor(survey$Background)
+# kruskal.test(knowledge~Background, survey)
+# There is a significant difference between the ag industry and consumers as far as knowledge 
+
+# dunnTest(knowledge ~ Background,
+         # data=survey,
+         # method="bonferroni")
+# Dunn test reveals there is a significant difference in knowledge based on the industy vs not
+
+
+# Subset the datasets to run the wilcoxon test 
+ag_back <- subset(survey, Background == c("Ag"), na.action = "omit")
+no_ag_back <- subset(survey, Background == c("NoAg"), na.action = "omit")
+
+wilcox.test(no_ag_back$knowledge, ag_back$knowledge)
+# Leads to the same p-value as the krusal walis analysis and Dunn's test 
+
+mean(no_ag_back$knowledge)
+mean(ag_back$knowledge)
+
+
+ggplot(survey, aes(Background, knowledge, fill = knowledge)) + geom_bar(stat = "summary")
+
+survey %>% 
+  filter(Background == c("Ag")) %>%
+  summarise(mean = mean(knowledge))
+
+survey %>% 
+  filter(Background == c("NoAg")) %>%
+  summarise(mean = mean(knowledge))
+
+```
+
+Knowledge Comparison - Farmers vs everyone else
+No significant difference in knowledge between farmers and everyone else 
+```{r}
+``{r}
+
+# assign knowledge level for Q17
+for (i in 1:nrow(survey)){
+  if (survey$Q20[i] == c("Producer/Farmer")){
+    survey$Farmer[i] <- as.character("Yes")}
+  else {
+    survey$Farmer[i] <- as.character("No")
+  }
+}
+
+library(dplyr)
+detach(package:plyr, unload=TRUE)
+
+farmer_sum <- survey %>%
+  group_by(knowledge, Farmer) %>%
+  summarise(count = n())
+farmer_sum
+# 30 farmers and 567 others 
+# Not a farmer Knowledge ranking: 0 knowledge: 59% Ag, 1: 35%, 2:6% 
+# Farmer Knowledge: 0 knowledge: 57%, 1: 33%, 2: 10%
+# There is not a significant difference in knowledge based on Farm background 
+
+dunnTest(knowledge ~ Background,
+         data=survey,
+         method="bonferroni")
+# Dunn test reveals there is not a significant difference in knowledge based on farm background
+
+```
+
+Attitude towards water quality
+```{r}
+# Concern towards algae blooms 
+survey$Q12 <- as.numeric(survey$Q12)
+
+attit <- survey %>%
+  group_by(Q12, Background) %>%
+  summarise(mean = mean(Q12),
+            count = n())
+attit
+
+ggplot(attit, aes(Q12, count, fill = Background)) + geom_bar(position = "dodge", stat = "summary", fun.y = "mean")
+
+ggplot(ag_back, aes(Q12)) + geom_histogram(binwidth=1, color="black", fill="white")+geom_vline(aes(xintercept=mean(Q12)), color="blue", linetype="dashed", size=1)+labs(x="Level", y="Response Count") +ggtitle("No Knowledge Response for 9.1")
+
+ggplot(no_ag_back, aes(Q12)) + geom_histogram(binwidth=1, color="black", fill="white")+geom_vline(aes(xintercept=mean(Q12)), color="blue", linetype="dashed", size=1)+labs(x="Level", y="Response Count") +ggtitle("No Knowledge Response for 9.1")
+
+
+wilcox.test(ag_back$Q12, no_ag_back$Q12)
+
+survey$q12 <- as.numeric(survey$Q12)
+kruskal.test(q12 ~ Background, survey)
+
+```
+
+Concern about water quality across all groups 
+```{r}
+concern <- survey %>%
+  group_by(Q9_3) %>%
+  summarise(count = n())
+concern
+```
+
+
+Concern about water quality in Minnesota by ag vs no ag background 
+```{r}
+# Concern about water quality for ag vs no ag background 
+ggplot(survey, aes(Background, Q9_1, fill = Background)) + geom_bar(stat = "summary", fun.y = "mean")
+ggplot(survey, aes(Background, Q9_2, fill = Background)) + geom_bar(stat = "summary", fun.y = "mean")
+ggplot(survey, aes(Background, Q9_3, fill = Background)) + geom_bar(stat = "summary", fun.y = "mean")
+
+ggplot(survey, aes(Q9_3)) + geom_histogram(binwidth=1, color="black", fill="white")+geom_vline(aes(xintercept=mean(Q9_3)), color="blue", linetype="dashed", size=1)+labs(x="Level", y="Response Count") +ggtitle("")
+
+mean(survey$Q9_1)
+mean(survey$Q9_2)
+mean(survey$Q9_3)
+
+
+# Concern about drinking and hygiene 
+wilcox.test(ag_back$Q9_1, no_ag_back$Q9_1)
+
+# This is significantly different 
+drink <- survey %>%
+  group_by(Q9_1, Background) %>%
+  summarise(mean = mean(Q9_1),
+            count = n())
+drink 
+
+ggplot(drink, aes(Q9_1, count, fill = Background)) + geom_bar(position = "dodge", stat = "summary", fun.y = "mean")
+
+kruskal.test(Q9_1 ~ Q8, survey)
+dunnTest(Q9_1 ~ Q8, survey)
+
+# Concern about recreation 
+wilcox.test(ag_back$Q9_2, no_ag_back$Q9_2)
+# This is significantly difference 
+rec <- survey %>%
+  group_by(Q9_2, Background) %>%
+  summarise(mean = mean(Q9_2),
+            count = n())
+rec
+
+ggplot(rec, aes(Q9_2, count, fill = Background)) + geom_bar(position = "dodge", stat = "summary", fun.y = "mean")
+
+kruskal.test(Q9_2 ~ Q8, survey)
+
+# Concern about environment 
+wilcox.test(ag_back$Q9_3, no_ag_back$Q9_3)
+# This is also significantly different between the two groups 
+envir <- survey %>%
+  group_by(Q9_3, Background) %>%
+  summarise(mean = mean(Q9_3),
+            count = n())
+envir
+
+ggplot(envir, aes(Q9_3, count, fill = Background)) + geom_bar(position = "dodge", stat = "summary", fun.y = "mean")
+
+kruskal.test(Q9_3 ~ Q8, survey)
+
+```
+
+Where causes water pollution?
+```{r}
+
+```
+
+
+
+Q16
+```{r}
+q16 <- read.csv("C:/Users/lmlev/iCloudDrive/UMN/Bayer Fellowship/Q16_Survey.csv")
+
+ggplot(q16 , aes(x= Q16_0_GROUP, color = Q8, fill = Q8)) +
+  geom_bar() +
+   #scale_color_manual(values=c('dodgerblue2'))+
+   #ylab("Percent RTLDG") +
+   #xlab("Percent Change in UAV Height") +
+   theme(plot.title = element_text(hjust = 0.5, size = 15),
+          # axis.text=element_text(size=13, colour = "black"),
+          # axis.title=element_text(size=14),
+          axis.text.x = element_text(angle = 45))
+          # legend.text = element_text(size=14, colour = "black")) 
+
+# Highest Contributors
+ggplot(q16 , aes(x= Q16_0_GROUP)) +
+  geom_bar() +
+  theme(axis.text.x = element_text(angle = 45))
+
+# Highest Contibutor
+ggplot(q16 , aes(x= Q16_0_GROUP, color = Q8, fill = Q8)) +
+  geom_bar() 
++
+  theme(axis.text.x = element_text(angle = 45))
+
+k1 <- kruskal.test(Q16_HIGH1 ~ Q8, data = q16)
+
+
+kruskal.test(Q16_HIGH1 ~ Q8, data = q16)
+
+
+Rural<-subset(q16, Q8=='Rural',na.action = "omit") 
+#Rural n = 106
+  
+Suburban<-subset(q16, Q8=='Suburban',na.action = "omit") 
+#Suburban n = 298
+
+Urban<-subset(q16, Q8=='Urban',na.action = "omit")
+# Urban n = 193
+
+ggplot(Rural , aes(x= Q16_0_GROUP)) +
+  geom_bar() +
+  theme(axis.text.x = element_text(angle = 45))
+
+
+
+ggplot(Urban , aes(x= Q16_0_GROUP)) +
+  geom_bar() +
+  theme(axis.text.x = element_text(angle = 45))
+
+
+
+ggplot(Suburban , aes(x= Q16_0_GROUP)) +
+  geom_bar() +
+  theme(axis.text.x = element_text(angle = 45))
+
+# Highest Contributor 
+
+ggplot(Rural , aes(x= Q16_HIGH1)) +
+  geom_bar() +
+  theme(axis.text.x = element_text(angle = 45))
+
+ggplot(Urban , aes(x= Q16_HIGH1)) +
+  geom_bar() +
+  theme(axis.text.x = element_text(angle = 45))
+
+ggplot(Suburban , aes(x= Q16_HIGH1)) +
+  geom_bar() +
+  theme(axis.text.x = element_text(angle = 45))
+
+
+summarize(Rural, 
+          )
+
+
+kruskal.test(Q12~Q8.1, data = SurveyDataMO)
+
+
+
+```
+
