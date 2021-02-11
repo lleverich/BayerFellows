@@ -19,7 +19,7 @@ library(FSA)
 
 # Load in data 
 ```{r}
-survey <- read.csv("C:/Users/lmlev/iCloudDrive/UMN/Bayer Fellowship/FinalDataFile_Survey_R.csv")
+survey <- read.csv("C:/Users/lmlev/Documents/Github/BayerFellows/Survey_results_filtered_finished_MO.csv")
 ```
 
 # Source of information
@@ -71,6 +71,125 @@ news_urban
 
 
 ```
+
+# Add knowledge level to survey data 
+```{r}
+# assign knowledge level for Q13
+for (i in 1:nrow(survey)){
+  if ((str_detect(survey$Q13[i], "Phosphorus"))){
+    survey$kq13[i] <- as.numeric(2)
+  } else {
+    survey$kq13[i] <- as.numeric(0)
+  }
+}
+
+# assign knowledge level for Q17
+for (i in 1:nrow(survey)){
+  if ((str_detect(survey$Q17[i], "Erosion"))){
+    survey$kq17[i] <- as.numeric(2)}
+  else if ((str_detect(survey$Q17[i], "Cropland runoff"))){
+      survey$kq17[i] <- as.numeric(2)}
+  else if ((str_detect(survey$Q17[i], "Application of fertilizers"))){
+      survey$kq17[i] <- as.numeric(1)}
+  else {
+    survey$kq17[i] <- as.numeric(0)}
+}
+
+# # Assign knowledge Value for question Q15 
+# for (i in 1:nrow(survey)){
+#   if ((str_detect(survey$Q15[i], "Algae blooms"))){
+#     survey$kq15_1[i] <- as.numeric(1)}
+#   else {
+#     survey$kq15_1[i] <- as.numeric(0)}
+# }
+
+# Function for assigning a knowledge value for Q15
+q15 <- function(survey){
+  
+  # Assign knowledge Value for question Q15 for the algae blooms
+  for (i in 1:nrow(survey)){
+    if ((str_detect(survey$Q15[i], "Algae blooms"))){
+      survey$kq15_1[i] <- as.numeric(1)}
+    else {
+      survey$kq15_1[i] <- as.numeric(0)}
+  }
+  
+  
+  # Loops for the correct values for the lesser point question values 
+  for (i in 1:nrow(survey)){
+    if ((str_detect(survey$Q15[i], "Death of fish and other aquatic life"))){
+      survey$k1[i] <- as.numeric(.25)}
+    else {
+      survey$k1[i] <- as.numeric(0)}
+  }
+  
+  for (i in 1:nrow(survey)){
+    if ((str_detect(survey$Q15[i], "Eutrophication"))){
+      survey$k2[i] <- as.numeric(.25)}
+    else {
+      survey$k2[i] <- as.numeric(0)}
+  }
+  
+  for (i in 1:nrow(survey)){
+    if ((str_detect(survey$Q15[i], "Toxic drinking water"))){
+      survey$k3[i] <- as.numeric(.25)}
+    else {
+      survey$k3[i] <- as.numeric(0)}
+  }
+  
+  for (i in 1:nrow(survey)){
+    if ((str_detect(survey$Q15[i], "Skin rashes with contact"))){
+      survey$k4[i] <- as.numeric(.25)}
+    else {
+      survey$k4[i] <- as.numeric(0)}
+  }
+  
+  # For loops for the incorrect answers 
+  for (i in 1:nrow(survey)){
+    if ((str_detect(survey$Q15[i], "Flooding"))){
+      survey$k5[i] <- as.numeric(-.25)}
+    else {
+      survey$k5[i] <- as.numeric(0)}
+  }
+  
+  for (i in 1:nrow(survey)){
+    if ((str_detect(survey$Q15[i], "Waterborne pathogens"))){
+      survey$k6[i] <- as.numeric(-.25)}
+    else {
+      survey$k6[i] <- as.numeric(0)}
+  }
+  
+  for (i in 1:nrow(survey)){
+    if ((str_detect(survey$Q15[i], "Disease from consumption"))){
+      survey$k7[i] <- as.numeric(-.25)}
+    else {
+      survey$k7[i] <- as.numeric(0)}
+  }
+  
+  for (i in 1:nrow(survey)){
+    if ((str_detect(survey$Q15[i], "Heavy Metal Contamination"))){
+      survey$k8[i] <- as.numeric(-.25)}
+    else {
+      survey$k8[i] <- as.numeric(0)}
+  }
+
+  survey$kq15 <- as.numeric(survey$kq15_1 + survey$k1 + survey$k2 + survey$k3 + survey$k4 + survey$k5 + survey$k6 + survey$k7 + survey$k8)
+  survey <- select(survey, -c("k1":"k8", "kq15_1"))
+  return(survey)
+}
+
+survey <- q15(survey)
+
+
+# Knowledge for participants split into three levels: 0, 1, and 2 
+survey$knowledge <- as.numeric((survey$kq13 + survey$kq15 + survey$kq17)/2)
+
+
+
+
+```
+
+
 
 # General Knowledge vs Actual Knowledge Ranking
 ```{r}
@@ -441,6 +560,29 @@ pollution_noag
 
 ```
 
+# Q13 
+```{r}
+
+chem <- survey %>% 
+  group_by(Q13) %>%
+  summarise(count = n(), 
+            perc = (count/594)*100)
+chem  
+
+chem_ag <- ag_back %>% 
+  group_by(Q13) %>%
+  summarise(count = n(), 
+            perc = (count/114)*100)
+chem_ag  
+
+count(no_ag_back)
+chem_noag <- no_ag_back %>% 
+  group_by(Q13) %>%
+  summarise(count = n(), 
+            perc = (count/483)*100)
+chem_noag  
+
+```
 
 
 Q16
