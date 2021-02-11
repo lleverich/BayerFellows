@@ -17,12 +17,12 @@ library(stringr)
 library(FSA)
 ```
 
-
+# Load in data 
 ```{r}
 survey <- read.csv("C:/Users/lmlev/iCloudDrive/UMN/Bayer Fellowship/FinalDataFile_Survey_R.csv")
 ```
 
-Source of information
+# Source of information
 ```{r}
 
 # Overview 
@@ -72,7 +72,7 @@ news_urban
 
 ```
 
-General Knowledge vs Actual Knowledge Ranking
+# General Knowledge vs Actual Knowledge Ranking
 ```{r}
 # Question 13 Knowledge
 know <- survey %>% 
@@ -211,8 +211,8 @@ low_know
 
 ```
 
-Is knowledge difference between rural, suburban and urban populations.
-Yes, there is significant differences between the rural and suburban populations (not with urban)
+# Is knowledge difference between rural, suburban and urban populations.
+## Yes, there is significant differences between the rural and suburban populations (not with urban)
 ```{r}
 # Is knowledge level influenced by rural, urban, suburban background?
 kruskal.test(knowledge~Q8, data = survey)
@@ -229,7 +229,7 @@ ggplot(survey, aes(know, fill = Q8)) + geom_bar(position = "dodge")
 ```
 
 # Knowledge Comparison by industry, are members of the ag industry more knowledgeable? 
-Yes, statistical difference between industry knowledge and consumer knowledge 
+## Yes, statistical difference between industry knowledge and consumer knowledge 
 ```{r}
 # assign knowledge level for Q17
 for (i in 1:nrow(survey)){
@@ -293,8 +293,8 @@ survey %>%
 
 ```
 
-Knowledge Comparison - Farmers vs everyone else
-No significant difference in knowledge between farmers and everyone else 
+# Knowledge Comparison - Farmers vs everyone else
+## No significant difference in knowledge between farmers and everyone else 
 ```{r}
 ``{r}
 
@@ -326,7 +326,7 @@ dunnTest(knowledge ~ Background,
 
 ```
 
-Attitude towards water quality
+# Attitude towards water quality
 ```{r}
 # Concern towards algae blooms 
 survey$Q12 <- as.numeric(survey$Q12)
@@ -351,7 +351,7 @@ kruskal.test(q12 ~ Background, survey)
 
 ```
 
-Concern about water quality across all groups 
+# Concern about water quality across all groups 
 ```{r}
 concern <- survey %>%
   group_by(Q9_3) %>%
@@ -359,8 +359,7 @@ concern <- survey %>%
 concern
 ```
 
-
-Concern about water quality in Minnesota by ag vs no ag background 
+# Concern about water quality in Minnesota by ag vs no ag background 
 ```{r}
 # Concern about water quality for ag vs no ag background 
 ggplot(survey, aes(Background, Q9_1, fill = Background)) + geom_bar(stat = "summary", fun.y = "mean")
@@ -417,8 +416,27 @@ kruskal.test(Q9_3 ~ Q8, survey)
 
 ```
 
-Where causes water pollution?
+# What is the major cause of P water pollution? Q17 
 ```{r}
+
+pollution <- survey %>% 
+  group_by(Q17) %>%
+  summarise(count = n(), 
+            perc = (count/594)*100)
+pollution  
+
+pollution_ag <- ag_back %>% 
+  group_by(Q17) %>%
+  summarise(count = n(), 
+            perc = (count/114)*100)
+pollution_ag  
+
+count(no_ag_back)
+pollution_noag <- no_ag_back %>% 
+  group_by(Q17) %>%
+  summarise(count = n(), 
+            perc = (count/483)*100)
+pollution_noag  
 
 ```
 
