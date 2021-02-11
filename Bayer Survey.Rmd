@@ -182,75 +182,58 @@ survey <- q15(survey)
 
 
 # Knowledge for participants split into three levels: 0, 1, and 2 
+survey$know <- as.numeric((survey$kq13 + survey$kq15 + survey$kq17)/2)
 survey$knowledge <- as.numeric((survey$kq13 + survey$kq15 + survey$kq17)/2)
 
-
-
+survey$know[survey$know <= 1] <- "No previous knowledge"
+survey$know[survey$know <= 1 & survey$know > ] <- "Some knowledge"
+survey$know[survey$know <= 3 & survey$know > 2.25] <- "Previous knowledge"
 
 ```
 
 
 
-# General Knowledge vs Actual Knowledge Ranking
+# General Knowledge vs Actual Knowledge Ranking (q14)
 ```{r}
 # Question 13 Knowledge
-know <- survey %>% 
+q13 <- survey %>% 
   drop_na(Q14_1) %>%
   group_by(Q14_1 , Q13 ) %>%
   summarize(count = n())
-know
+q13
 
-ggplot(know, aes(Q14_1, count, fill = Q13)) + geom_bar(stat = 'identity', position = "dodge")
+ggplot(q13, aes(Q14_1, count, fill = Q13)) + geom_bar(stat = 'identity', position = "dodge")
 
 # Question 17 Knowledge
-know2 <- survey %>% 
+q17 <- survey %>% 
   drop_na(Q14_1) %>%
   group_by(Q14_1 , Q17 ) %>%
   summarize(count = n())
-know2
+q17
 
-ggplot(know2, aes(Q14_1, count, fill = Q17)) + geom_bar(stat = 'identity', position = "dodge")
+ggplot(q17, aes(Q14_1, count, fill = Q17)) + geom_bar(stat = 'identity', position = "dodge")
 
 # Question 13 and 17 summary
 # Summary of knowledge including the knowledge questions and also the participants ranking of their own knowledge 
-know3 <- survey %>% 
+q13_17 <- survey %>% 
   drop_na(Q14_1) %>%
   group_by(Q14_1 , Q17 , Q13) %>%
   summarize(count = n())
-know3
-
-# Create empty columns to assign knowledge level (high, mod, low)
-know3$know1 <- NA
-know3$know2 <- NA
-
-# assign knowledge level for Q13
-for (i in 1:nrow(know3)){
-  if ((str_detect(know3$Q13[i], "Phosphorus"))){
-    know3$know1[i] <- as.numeric(1)
-  } else {
-    know3$know1[i] <- as.numeric(0)
-  }
-}
-
-# assign knowledge level for Q17
-for (i in 1:nrow(know3)){
-  if ((str_detect(know3$Q17[i], "Erosion"))){
-    know3$know2[i] <- as.numeric(1)}
-  else if ((str_detect(know3$Q17[i], "Cropland runoff"))){
-      know3$know2[i] <- as.numeric(1)}
-  else {
-    know3$know2[i] <- as.numeric(0)}
-}
-
-# Knowledge for participants split into three levels: 0, 1, and 2 
-know3$knowledge <- as.numeric(know3$know1 + know3$know2)
+q13_17
 
 
 # FINAL SUMMARY of knowledge level in comparison to claimed knowledge level 
-know4 <- know3 %>% 
-  group_by(Q14_1 , knowledge) %>%
-  summarize(total = sum(count))
-know4
+know_sum <- survey %>%
+  drop_na(Q14_1) %>%
+  group_by(Q14_1, know) %>%
+  summarise(count = n())
+know_sum
+
+
+know_sum2 <- survey %>%
+  group_by(know) %>%
+  summarize(total = n())
+know_sum2
 
 # How many participants with previous knowledge 
 # 35 with knowledge, 201 with some knowledge, and 328 with no knowledge 
@@ -261,10 +244,10 @@ know5
 
 # How did participants rank their knowledge level (0-1) (2-3) (4-5)
 # 47 high knowledge, 202 with moderate knowledge, 315 little knowledge 
-know6 <- know3 %>% 
+know_sum3 <- survey %>% 
   group_by(Q14_1) %>%
-  summarize(total = sum(count))
-know6
+  summarize(total = n())
+know_sum3
 
 
 # Graphing the knowledge levels 
@@ -282,6 +265,15 @@ ggplot(know4, aes(Q14_1, total, fill = knowledge)) +
   labs(x = "Knowledge Rank by Participant", 
        fill = "Actual Knowledge Level", 
        y = "Responses") 
+
+
+# FIGURE 1. Knowledge comparison among participants 
+ggplot(know_sum, aes(Q14_1, count, fill = know)) + 
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(x = "Knowledge Rank by Participant", 
+       fill = "Actual Knowledge Level", 
+       y = "Responses") 
+
 
 # Run next block before these 
 # kruskal.test(Q14_1~knowledge, survey)
