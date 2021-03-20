@@ -19,328 +19,220 @@ library(FSA)
 
 # Load in data 
 ```{r}
-survey <- read.csv("C:/Users/lmlev/Documents/Github/BayerFellows/Survey_results_filtered_finished_MO.csv")
+survey <- read.csv("C:\\Users\\lmlev\\iCloudDrive\\UMN\\Bayer Fellowship\\FinalDataFile_Survey_results.csv")
 ```
 
-# Source of information
-```{r}
-
-# Overview 
-info_source <- survey %>% 
-  drop_na(Q19) %>%
-  group_by(Q8 , Q19 ) %>%
-  summarize(count = n())
-info_source
-
-
-
-info <- spread(info_source, Q8, count)
-
-ggplot(info_source, aes(Q19, count, fill = Q8)) + geom_bar(stat = 'identity', position = "dodge")
-
-# Rural 
-rural_N <- count(survey, Q8 == "Rural")[2, 2]
-
-news_rural <- survey %>%
-  subset(Q8 == "Rural") %>%
-  group_by(Q19) %>%
-  summarise(n = n(), 
-            perc = n/rural_N*100)
-news_rural
-
-#Suburban
-suburban_N <- count(survey, Q8 == "Suburban")[2, 2]
-
-news_suburban <- survey %>%
-  subset(Q8 == "Suburban") %>%
-  group_by(Q19) %>%
-  summarise(n = n(), 
-            perc = n/suburban_N*100)
-news_suburban
-
-#Urban 
-
-urban_N <- count(survey, Q8 == "Urban")[2, 2]
-
-news_urban <- survey %>%
-  subset(Q8 == "Urban") %>%
-  group_by(Q19) %>%
-  summarise(n = n(), 
-            perc = n/urban_N*100)
-news_urban
-
-
-```
-
-# Add knowledge level to survey data 
+# Knowledge Comparisons 
+## Add knowledge level to survey data 
 ```{r}
 # assign knowledge level for Q13
 for (i in 1:nrow(survey)){
   if ((str_detect(survey$Q13[i], "Phosphorus"))){
-    survey$kq13[i] <- as.numeric(2)
+    survey$kq13[i] <- as.numeric(1)
   } else {
     survey$kq13[i] <- as.numeric(0)
   }
 }
 
-# assign knowledge level for Q17
+# Assign knowledge Value for question Q15
 for (i in 1:nrow(survey)){
-  if ((str_detect(survey$Q17[i], "Erosion"))){
-    survey$kq17[i] <- as.numeric(2)}
-  else if ((str_detect(survey$Q17[i], "Cropland runoff"))){
-      survey$kq17[i] <- as.numeric(2)}
-  else if ((str_detect(survey$Q17[i], "Application of fertilizers"))){
-      survey$kq17[i] <- as.numeric(1)}
+  if ((str_detect(survey$Q15[i], "Algae blooms"))){
+    survey$kq15[i] <- as.numeric(1)}
   else {
-    survey$kq17[i] <- as.numeric(0)}
+    survey$kq15[i] <- as.numeric(0)}
 }
-
-# # Assign knowledge Value for question Q15 
-# for (i in 1:nrow(survey)){
-#   if ((str_detect(survey$Q15[i], "Algae blooms"))){
-#     survey$kq15_1[i] <- as.numeric(1)}
-#   else {
-#     survey$kq15_1[i] <- as.numeric(0)}
-# }
-
-# Function for assigning a knowledge value for Q15
-q15 <- function(survey){
-  
-  # Assign knowledge Value for question Q15 for the algae blooms
-  for (i in 1:nrow(survey)){
-    if ((str_detect(survey$Q15[i], "Algae blooms"))){
-      survey$kq15_1[i] <- as.numeric(1)}
-    else {
-      survey$kq15_1[i] <- as.numeric(0)}
-  }
-  
-  
-  # Loops for the correct values for the lesser point question values 
-  for (i in 1:nrow(survey)){
-    if ((str_detect(survey$Q15[i], "Death of fish and other aquatic life"))){
-      survey$k1[i] <- as.numeric(.25)}
-    else {
-      survey$k1[i] <- as.numeric(0)}
-  }
-  
-  for (i in 1:nrow(survey)){
-    if ((str_detect(survey$Q15[i], "Eutrophication"))){
-      survey$k2[i] <- as.numeric(.25)}
-    else {
-      survey$k2[i] <- as.numeric(0)}
-  }
-  
-  for (i in 1:nrow(survey)){
-    if ((str_detect(survey$Q15[i], "Toxic drinking water"))){
-      survey$k3[i] <- as.numeric(.25)}
-    else {
-      survey$k3[i] <- as.numeric(0)}
-  }
-  
-  for (i in 1:nrow(survey)){
-    if ((str_detect(survey$Q15[i], "Skin rashes with contact"))){
-      survey$k4[i] <- as.numeric(.25)}
-    else {
-      survey$k4[i] <- as.numeric(0)}
-  }
-  
-  # For loops for the incorrect answers 
-  for (i in 1:nrow(survey)){
-    if ((str_detect(survey$Q15[i], "Flooding"))){
-      survey$k5[i] <- as.numeric(-.25)}
-    else {
-      survey$k5[i] <- as.numeric(0)}
-  }
-  
-  for (i in 1:nrow(survey)){
-    if ((str_detect(survey$Q15[i], "Waterborne pathogens"))){
-      survey$k6[i] <- as.numeric(-.25)}
-    else {
-      survey$k6[i] <- as.numeric(0)}
-  }
-  
-  for (i in 1:nrow(survey)){
-    if ((str_detect(survey$Q15[i], "Disease from consumption"))){
-      survey$k7[i] <- as.numeric(-.25)}
-    else {
-      survey$k7[i] <- as.numeric(0)}
-  }
-  
-  for (i in 1:nrow(survey)){
-    if ((str_detect(survey$Q15[i], "Heavy Metal Contamination"))){
-      survey$k8[i] <- as.numeric(-.25)}
-    else {
-      survey$k8[i] <- as.numeric(0)}
-  }
-
-  survey$kq15 <- as.numeric(survey$kq15_1 + survey$k1 + survey$k2 + survey$k3 + survey$k4 + survey$k5 + survey$k6 + survey$k7 + survey$k8)
-  survey <- select(survey, -c("k1":"k8", "kq15_1"))
-  return(survey)
-}
-
-survey <- q15(survey)
-
 
 # Knowledge for participants split into three levels: 0, 1, and 2 
-survey$know <- as.numeric((survey$kq13 + survey$kq15 + survey$kq17)/2)
-survey$knowledge <- as.numeric((survey$kq13 + survey$kq15 + survey$kq17)/2)
+survey$know <- as.numeric((survey$kq13 + survey$kq15))
+survey$knowledge <- survey$know #Factor version of the knowledge level 
 
-survey$know[survey$know <= 1] <- "No previous knowledge"
-survey$know[survey$know <= 1 & survey$know > ] <- "Some knowledge"
-survey$know[survey$know <= 3 & survey$know > 2.25] <- "Previous knowledge"
+# Create classes 0 to 5 for previous knowledge 
+survey$knowledge[survey$knowledge == 0] <- "no knowledge"
+survey$knowledge[survey$knowledge == 1] <- "some knowledge"
+survey$knowledge[survey$knowledge == 2] <- "knowledgeable"
 
+survey$knowledge <- as.factor(survey$knowledge)
 ```
 
-
-
-# General Knowledge vs Actual Knowledge Ranking (q14)
+## General Knowledge (Q13 and Q15) vs Actual Knowledge Ranking (q14)
 ```{r}
 # Question 13 Knowledge
 q13 <- survey %>% 
   drop_na(Q14_1) %>%
-  group_by(Q14_1 , Q13 ) %>%
+  group_by(Q14_1 , Q13) %>%
   summarize(count = n())
 q13
 
 ggplot(q13, aes(Q14_1, count, fill = Q13)) + geom_bar(stat = 'identity', position = "dodge")
 
-# Question 17 Knowledge
-q17 <- survey %>% 
+q15 <- survey %>%
   drop_na(Q14_1) %>%
-  group_by(Q14_1 , Q17 ) %>%
+  group_by(Q14_1, kq15) %>%
   summarize(count = n())
-q17
+q15
 
-ggplot(q17, aes(Q14_1, count, fill = Q17)) + geom_bar(stat = 'identity', position = "dodge")
-
-# Question 13 and 17 summary
-# Summary of knowledge including the knowledge questions and also the participants ranking of their own knowledge 
-q13_17 <- survey %>% 
-  drop_na(Q14_1) %>%
-  group_by(Q14_1 , Q17 , Q13) %>%
-  summarize(count = n())
-q13_17
-
+ggplot(q15, aes(as.factor(Q14_1), count, fill = as.factor(kq15))) + geom_bar(stat = 'identity', position = "dodge")
 
 # FINAL SUMMARY of knowledge level in comparison to claimed knowledge level 
 know_sum <- survey %>%
   drop_na(Q14_1) %>%
-  group_by(Q14_1, know) %>%
+  group_by(Q14_1, knowledge) %>%
   summarise(count = n())
 know_sum
 
 
-know_sum2 <- survey %>%
-  group_by(know) %>%
-  summarize(total = n())
-know_sum2
+dunnTest(Q14_1~knowledge, survey) 
+kruskal.test(Q14_1~knowledge, survey)
+# Significant both ways, but not a useful insight 
 
-# How many participants with previous knowledge 
-# 35 with knowledge, 201 with some knowledge, and 328 with no knowledge 
-know5 <- know3 %>% 
+# How many participants had previous knowledge (ACTUAL)
+# (0) 139, (1) 149, (2) 276 
+act_know <- survey %>%
+  drop_na(Q14_1) %>%
   group_by(knowledge) %>%
-  summarize(total = sum(count))
-know5
+  summarize(total = n())
+act_know
 
-# How did participants rank their knowledge level (0-1) (2-3) (4-5)
-# 47 high knowledge, 202 with moderate knowledge, 315 little knowledge 
-know_sum3 <- survey %>% 
+# How did participants rank their knowledge level
+# (0) 142, (1) 173, (2) 111, (3) 91, (4) 34, (5) 13 
+partic_know <- survey %>% 
+  drop_na(Q14_1) %>%
   group_by(Q14_1) %>%
   summarize(total = n())
-know_sum3
+partic_know
 
+know_sum
+# Many people who ranked their knowledge as zero were actually able to answer at least one of the questions correctly (88 out of 139)
+# Of those that ranked themselves as highly knowledgeable (13), 4 got at least one question incorrect (30% of respondents)
+# In general people were unable to correctly classify their own knowledge. 
 
-# Graphing the knowledge levels 
-know4$Q14_1 <- as.factor(know4$Q14_1)
-know4$knowledge <- as.factor(know4$knowledge)
+# Kruskal Wallis test cannot have an ordered factor 
+know_sum$knowledge <- factor(know_sum$knowledge, ordered = TRUE, 
+                                levels = c("no knowledge", 
+                                           "some knowledge", 
+                                           "knowledgeable"))
 
-library(plyr)
-library(plyr)
-know4$knowledge <- mapvalues(know4$knowledge, from = c(0,1, 2), to = c("No Previous Knowledge", "Some Previous Knowledge", "Previous Knowledge"))
-
-
-# FIGURE 1. Knowledge comparison among participants 
-ggplot(know4, aes(Q14_1, total, fill = knowledge)) + 
+# FIGURE FOR PAPER 
+ggplot(know_sum, aes(as.factor(Q14_1), count, fill = knowledge)) + 
   geom_bar(stat = "identity", position = "dodge") +
   labs(x = "Knowledge Rank by Participant", 
-       fill = "Actual Knowledge Level", 
-       y = "Responses") 
-
-
-# FIGURE 1. Knowledge comparison among participants 
-ggplot(know_sum, aes(Q14_1, count, fill = know)) + 
-  geom_bar(stat = "identity", position = "dodge") +
-  labs(x = "Knowledge Rank by Participant", 
-       fill = "Actual Knowledge Level", 
-       y = "Responses") 
-
-
-# Run next block before these 
-# kruskal.test(Q14_1~knowledge, survey)
-# dunnTest(Q14_1~knowledge, survey)
-
+       fill = "Actual Knowledge\nLevel", 
+       y = "Responses") +
+  scale_fill_manual(values = c("#F8766D", "#00BA38", "#619CFF"))
 
 ```
 
-# Label knowledge level in the survey data 
+## Is knowledge difference between rural, suburban and urban populations.
+### No, there is no significant differences between the rural and suburban populations (not with urban)
 ```{r}
-# Create empty columns to assign knowledge level (high, mod, low)
-survey$know1 <- NA
-survey$know2 <- NA
-
-# assign knowledge level for Q13
-for (i in 1:nrow(survey)){
-  if ((str_detect(survey$Q13[i], "Phosphorus"))){
-    survey$know1[i] <- as.numeric(1)
-  } else {
-    survey$know1[i] <- as.numeric(0)
-  }
-}
-
-survey$know2 <- as.numeric(0)
-
-# assign knowledge level for Q17
-for (i in 1:nrow(survey)){
-  if (str_detect(survey$Q17[i], "Erosion|Cropland runoff")){
-    survey$know2[i] <- as.numeric(1)}
-  else {
-    survey$know2[i] <- as.numeric(0)
-  }
-}
-
-# Knowledge for participants split into three levels: 0, 1, and 2 
-survey$knowledge <- as.numeric(survey$know1 + survey$know2)
-survey$know <- as.factor(survey$knowledge)
-
-
-low_know <- survey %>%
-  filter(knowledge == 0) %>%
-  summarise(count = n())
-low_know
-# 351 with no knowledge, 59% 
-
-
-```
-
-# Is knowledge difference between rural, suburban and urban populations.
-## Yes, there is significant differences between the rural and suburban populations (not with urban)
-```{r}
-# Is knowledge level influenced by rural, urban, suburban background?
-kruskal.test(knowledge~Q8, data = survey)
+# Is ACTUAL knowledge level influenced by rural, urban, suburban background?
+kruskal.test(know~Q8, data = survey)
 
 #perform Dunn's Test with Bonferroni correction for p-values
-dunnTest(knowledge ~ Q8,
+dunnTest(know ~ Q8,
          data=survey,
          method="bonferroni")
 
-
 # Plot for knowledge by rural/urban
-ggplot(survey, aes(know, fill = Q8)) + geom_bar(position = "dodge")
-# Plot shows that across urban, suburban and urban poplutions the most common knowledge class was 0, followed by 1 then 2. Same pattern for all.
+ggplot(survey, aes(knowledge, fill = Q8)) + geom_bar(position = "dodge")
+
+
+# Participant Ranking of Knowledge 
+# Is knowledge ranking influenced by rural, urban, suburban background?
+kruskal.test(Q14_1~Q8, data = survey)
+
+#perform Dunn's Test with Bonferroni correction for p-values
+dunnTest(Q14_1 ~ Q8,
+         data=survey,
+         method="bonferroni")
+
+# FIGURE FOR PAPER
+ggplot(data=subset(survey, !is.na(Q14_1)), aes(as.factor(Q14_1), fill = Q8)) +
+  geom_bar(position = "dodge", stat = "count") +
+  labs(x = "Self Identified Knowledge Level (Selected by Participant)", 
+       y = "Number of Participants") +
+  scale_fill_hue("")
+# Rural populations were believed they had more knowledge than those from Urban and Suburban populations
+
 ```
 
+## Knowledge Comparison - Farmers vs everyone else
+### No significant difference in knowledge between farmers and everyone else 
+```{r}
+``{r}
+# assign Farmer status 
+for (i in 1:nrow(survey)){
+  if (survey$Q20[i] == c("Producer/Farmer")){
+    survey$Farmer[i] <- as.character("Yes")}
+  else {
+    survey$Farmer[i] <- as.character("No")
+  }
+}
+
+survey$Farmer <- as.factor(survey$Farmer)
+
+farmers <- survey %>%
+  group_by(Farmer) %>%
+  summarize(count = n())
+farmers
+
+# Farmer Summary 
+qknow <- survey %>%
+  group_by(know, Farmer) %>%
+  summarize(count = n(), 
+            perc_farmer = (count/30)*100, 
+            perc_nofarmer = (count/567)*100)
+qknow
+
+# Is Age statistically different between Farmers and not Farmers? 
+farmer_sum <- survey %>%
+  group_by(Q2, Farmer) %>%
+  summarise(count = n())
+farmer_sum
+
+ggplot(farmer_sum, aes(Q2, count, fill = Farmer)) + geom_bar(stat = "identity", fun.y = "mean", position = "dodge")
+
+kruskal.test(Q2~Farmer, survey)
+# Age is not a significantly affected by if the respondent is a farmer. 
+
+library(dplyr)
+detach(package:plyr, unload=TRUE)
+
+farmer_sum2 <- survey %>%
+  group_by(knowledge, Farmer) %>%
+  summarise(count = n(), 
+            perc_farm = (count/30)*100, 
+            perc_nonfarm = (count/567)*100)
+farmer_sum2
+# 30 farmers and 567 others 
+# Not a farmer Knowledge ranking: 0 knowledge: 26%, 1: 50%, 2:24% 
+# Farmer Knowledge: 0 knowledge: 53%, 1: 23%, 2: 23%
+# There is a significant difference in knowledge based on Farm background 
+
+dunnTest(know ~ Farmer,
+         data=survey,
+         method="bonferroni")
+kruskal.test(know~Farmer, survey)
+# Dunn test reveals there IS a significant difference between farmers and non farmers. Farmers were MORE likely to be LESS knowledgeable. 
+
+# Why did farmers get it wrong?
+farmer_sum3 <- survey %>%
+  group_by(Q13, Farmer) %>%
+  summarise(count = n(), 
+            perc_farm = (count/30)*100, 
+            perc_nonfarm = (count/567)*100)
+farmer_sum3
+
+ggplot(farmer_sum3, aes(Q13, count, fill = Farmer)) + geom_bar(stat = "identity", position = "dodge")
+# 40% of the time, Farmers thought N was the major contributor to algae blooms, where only 23% of respondents identified P correctly. For non farmers, there was no clear consensus. 22% bacteria, 25% N, and 26% P (the remainder was pesticides and synthetic chemicals)
+# While farmers did get it wrong more often, they often selected the other major pollutant, Nitrogen. 63.3% identified the top two pollutants for water (P and N), but failed to identify which affects freshwater sources. Where as the general public selected the two top pollutants (N and P) only half of the time (51%). 
+
+```
+
+
+
 # Knowledge Comparison by industry, are members of the ag industry more knowledgeable? 
-## Yes, statistical difference between industry knowledge and consumer knowledge 
+## No, statistical difference between industry knowledge and consumer knowledge 
 ```{r}
 # assign knowledge level for Q17
 for (i in 1:nrow(survey)){
@@ -351,93 +243,126 @@ for (i in 1:nrow(survey)){
   }
 }
 
-count(survey$Q20 == c("Consumer"))
-# 114 other, 483 just consumers 
+survey$Background <- as.factor(survey$Background)
 
-library(dplyr)
-detach(package:plyr, unload=TRUE)
+back <- survey %>%
+  group_by(Background) %>%
+  summarise(count = n())
+back
+# 114 other, 483 just consumers 
 
 backgroundsum <- survey %>%
   group_by(knowledge, Background) %>%
-  summarise(count = n())
+  summarise(count = n(), 
+            perc_ag = (count/114)*100, 
+            perc_noag = (count/483)*100)
 backgroundsum
-# Ag Knowledge ranking: 0 knowledge: 49% Ag, 1: 40%, 2:11% 
-# No Ag Knowledge: 0 knowledge: 61%, 1: 34%, 2: 5%
-# Ag background did translate to greater knowledge, test with non parametric test 
+# Ag Knowledge ranking: 0 knowledge: 31%, 1: 42%, 2: 27%
+# No Ag Knowledge ranking: 0 knowledge: 27% Ag, 1: 50%, 2: 23%
+
+q13 <- survey %>%
+  drop_na(Q13) %>%
+  group_by(kq13, Background) %>%
+  summarize(count = n(), 
+            perc_ag = (count/114)*100, 
+            perc_noag = (count/483)*100)
+q13
+# 68% of those with an ag background got q13 wrong. 75% of those without an ag background got q13 wrong 
+
+q15 <- survey %>%
+  drop_na(Q15) %>%
+  group_by(kq15, Background) %>%
+  summarize(count = n(), 
+            perc_ag = (count/114)*100, 
+            perc_noag = (count/483)*100)
+q15
+# 65% of those with an ag background were able to identify algae blooms. 71% of those without an ag background were also able to identify algae blooms 
+
 
 # Knowledge by association
-ggplot(survey, aes(knowledge, fill = Background)) + geom_bar(position = "dodge")
+ggplot(survey, aes(Background, fill = knowledge)) + geom_bar(position = "dodge")
 
-# library(ggpubr)
-# ggboxplot(survey, y = knowledge, x = Background)
-
-# survey$Background <- as.factor(survey$Background)
-# kruskal.test(knowledge~Background, survey)
-# There is a significant difference between the ag industry and consumers as far as knowledge 
-
-# dunnTest(knowledge ~ Background,
-         # data=survey,
-         # method="bonferroni")
-# Dunn test reveals there is a significant difference in knowledge based on the industy vs not
+kruskal.test(knowledge~Background, survey)
+# There is NO significant difference between the ag industry and consumers as far as knowledge 
 
 
 # Subset the datasets to run the wilcoxon test 
 ag_back <- subset(survey, Background == c("Ag"), na.action = "omit")
 no_ag_back <- subset(survey, Background == c("NoAg"), na.action = "omit")
 
-wilcox.test(no_ag_back$knowledge, ag_back$knowledge)
+
+wilcox.test(no_ag_back$know, ag_back$know)
 # Leads to the same p-value as the krusal walis analysis and Dunn's test 
 
-mean(no_ag_back$knowledge)
-mean(ag_back$knowledge)
+mean(no_ag_back$know)
+mean(ag_back$know)
 
 
-ggplot(survey, aes(Background, knowledge, fill = knowledge)) + geom_bar(stat = "summary")
+backgroundsum2 <- survey %>%
+  drop_na(Q14_1) %>%
+  group_by(Q14_1, Background) %>%
+  summarise(count = n(), 
+            perc_ag = (count/111)*100, 
+            perc_noag = (count/453)*100)
+backgroundsum2
 
-survey %>% 
-  filter(Background == c("Ag")) %>%
-  summarise(mean = mean(knowledge))
+kruskal.test(Q14_1~Background, survey)
+wilcox.test(no_ag_back$Q14_1, ag_back$Q14_1)
 
-survey %>% 
-  filter(Background == c("NoAg")) %>%
-  summarise(mean = mean(knowledge))
+# FIGURE FOR PAPER
+ggplot(subset(survey, !is.na(Q14_1)), aes(Background, fill = as.factor(Q14_1))) + geom_bar(position = "dodge") +
+  scale_fill_hue("Self Assigned\nKnowledge Ranking") +
+  labs(x = "Agricultural Affiliation", 
+       y = "Number of Respondents") +
+  scale_x_discrete(labels=c("Ag" = "Affiliated", "NoAg" = "No Affiliation"))
+
 
 ```
 
-# Knowledge Comparison - Farmers vs everyone else
-## No significant difference in knowledge between farmers and everyone else 
+## Knowledge comparison by age
 ```{r}
-``{r}
-
-# assign knowledge level for Q17
-for (i in 1:nrow(survey)){
-  if (survey$Q20[i] == c("Producer/Farmer")){
-    survey$Farmer[i] <- as.character("Yes")}
-  else {
-    survey$Farmer[i] <- as.character("No")
-  }
-}
-
-library(dplyr)
-detach(package:plyr, unload=TRUE)
-
-farmer_sum <- survey %>%
-  group_by(knowledge, Farmer) %>%
+age_know <- survey %>%
+  group_by(Q2) %>%
   summarise(count = n())
-farmer_sum
-# 30 farmers and 567 others 
-# Not a farmer Knowledge ranking: 0 knowledge: 59% Ag, 1: 35%, 2:6% 
-# Farmer Knowledge: 0 knowledge: 57%, 1: 33%, 2: 10%
-# There is not a significant difference in knowledge based on Farm background 
+age_know
 
-dunnTest(knowledge ~ Background,
-         data=survey,
-         method="bonferroni")
-# Dunn test reveals there is not a significant difference in knowledge based on farm background
+age_know <- survey %>%
+  group_by(Q2, knowledge) %>%
+  summarise(count = n())
+age_know
+
+# FIGURE FOR PAPER 
+ggplot(survey, aes(Q2, fill = knowledge)) + 
+  geom_bar(position = "dodge") + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) + 
+  scale_fill_hue("Actual Knowledge")+ 
+  labs(x = "Age", 
+       y = "Number of Respondents")
+  
+
+age_know2 <- survey %>%
+  group_by(Q2) %>%
+  summarise(count = n(), 
+            mean = mean(know))
+age_know2
+
+# FIGURE FOR PAPER
+ggplot(age_know2, aes(Q2, mean, fill = Q2)) + 
+  geom_bar(position = "dodge", stat = "identity") + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) + 
+  scale_fill_hue("")+ 
+  labs(x = "", 
+       y = "Average Knowledge Level")
+
+kruskal.test(know~Q2, survey)
+dunnTest(know~Q2, survey)
 
 ```
+
 
 # Attitude towards water quality
+## Algae Bloom Concern
+### Concern was not different between ag and no ag backgrounds NOR urban v rural v suburban populations 
 ```{r}
 # Concern towards algae blooms 
 survey$Q12 <- as.numeric(survey$Q12)
@@ -458,7 +383,7 @@ ggplot(no_ag_back, aes(Q12)) + geom_histogram(binwidth=1, color="black", fill="w
 wilcox.test(ag_back$Q12, no_ag_back$Q12)
 
 survey$q12 <- as.numeric(survey$Q12)
-kruskal.test(q12 ~ Background, survey)
+kruskal.test(Q12 ~ Q8, survey)
 
 ```
 
@@ -487,7 +412,7 @@ mean(survey$Q9_3)
 # Concern about drinking and hygiene 
 wilcox.test(ag_back$Q9_1, no_ag_back$Q9_1)
 
-# This is significantly different 
+# This is significantly different suburban vs urban concern 
 drink <- survey %>%
   group_by(Q9_1, Background) %>%
   summarise(mean = mean(Q9_1),
@@ -525,6 +450,154 @@ ggplot(envir, aes(Q9_3, count, fill = Background)) + geom_bar(position = "dodge"
 
 kruskal.test(Q9_3 ~ Q8, survey)
 
+```
+
+
+# Concern about water quality in Minnesota by age 
+```{r}
+age <- survey %>%
+  group_by(Q2) %>%
+  summarize(count = n())
+age
+
+age_concern <- survey %>%
+  group_by(Q2, Q9_3) %>%
+  summarize(count = n(),
+            perc_18 = (count/127)*100,
+            perc_25 = (count/105)*100, 
+            perc_35 = (count/74)*100, 
+            perc_45 = (count/108)*100, 
+            perc_55 = (count/117)*100, 
+            perc_65 = (count/56)*100, 
+            perc_75 = (count/10)*100
+  )
+age_concern
+
+
+ggplot(age, aes(Q9_3, count, fill = Q2)) + geom_bar(position = "dodge", stat = "summary", fun.y = "mean")
+
+# How did respondents grade their knowledge by age 
+age <- survey %>%
+  drop_na (Q14_1) %>% 
+  group_by(Q2) %>%
+  summarize(count = n())
+age
+
+
+age_know <- survey %>%
+  drop_na(Q14_1)
+  group_by(Q2, Q14_1) %>%
+  summarize(count = n(),
+            perc_18 = (count/118)*100,
+            perc_25 = (count/98)*100, 
+            perc_35 = (count/71)*100, 
+            perc_45 = (count/104)*100, 
+            perc_55 = (count/111)*100, 
+            perc_65 = (count/53)*100, 
+            perc_75 = (count/9)*100
+  )
+age_know
+
+ggplot(age_know, aes(Q14_1, count, fill = Q2)) + geom_bar(position = "dodge", stat = "summary", fun.y = "mean")
+
+
+
+```
+
+
+# Source of information
+```{r}
+info_source <- survey %>% 
+  drop_na(Q19) %>%
+  group_by(Q19 ) %>%
+  summarize(count = n(), 
+            perc = (count/595)*100)
+info_source
+
+total = sum(info_source$count)
+# 595 answers for the new sources 
+
+# Overview 
+info_source <- survey %>% 
+  drop_na(Q19) %>%
+  group_by(Q8 , Q19 ) %>%
+  summarize(count = n())
+info_source
+
+
+info <- spread(info_source, Q8, count)
+
+ggplot(info_source, aes(Q19, count, fill = Q8)) + geom_bar(stat = 'identity', position = "dodge")
+
+kruskal.test(Q19 ~ Q8, survey)
+
+# Rural 
+rural_N <- count(survey, Q8 == "Rural")[2, 2]
+
+news_rural <- survey %>%
+  subset(Q8 == "Rural") %>%
+  group_by(Q19) %>%
+  summarise(n = n(), 
+            perc = n/rural_N*100)
+news_rural
+
+#Suburban
+suburban_N <- count(survey, Q8 == "Suburban")[2, 2]
+
+news_suburban <- survey %>%
+  subset(Q8 == "Suburban") %>%
+  group_by(Q19) %>%
+  summarise(n = n(), 
+            perc = n/suburban_N*100)
+news_suburban
+
+#Urban 
+
+urban_N <- count(survey, Q8 == "Urban")[2, 2]
+
+news_urban <- survey %>%
+  subset(Q8 == "Urban") %>%
+  group_by(Q19) %>%
+  summarise(n = n(), 
+            perc = n/urban_N*100)
+news_urban
+
+
+
+# News based on age
+
+infoage <- survey %>% 
+  drop_na(Q19) %>%
+  group_by(Q2) %>%
+  summarize(count = n())
+infoage
+# Remove one value from the 18 and 25 age groups (2 nas)
+
+info_age <- survey %>% 
+  drop_na(Q19) %>%
+  group_by(Q2 , Q19 ) %>%
+  summarize(count = n(),
+            perc_18 = (count/126)*100,
+            perc_25 = (count/104)*100, 
+            perc_35 = (count/74)*100, 
+            perc_45 = (count/108)*100, 
+            perc_55 = (count/117)*100, 
+            perc_65 = (count/56)*100, 
+            perc_75 = (count/10)*100)
+info_age
+
+
+# create bar plot
+pie = ggplot(info_age, aes(x = Q19, y = count, fill = Q19)) +
+  geom_bar(stat = "identity", position = "dodge", width = 1) +
+  facet_wrap(~ Q2)
+
+pie
+             
+ggplot(info_age, aes(Q19, count, fill = Q2)) + geom_bar(stat = 'identity', position = "dodge")
+
+kruskal.test(Q19 ~ Q2, survey)
+dunnTest(Q19~Q2, survey)
 ```
 
 
@@ -659,3 +732,195 @@ kruskal.test(Q12~Q8.1, data = SurveyDataMO)
 
 ```
 
+# CODE ARCHIVE 
+## Question 17 analysis before question was dropped 
+```{r}
+
+## assign knowledge level for Q17
+# for (i in 1:nrow(survey)){
+#   if ((str_detect(survey$Q17[i], "Erosion"))){
+#     survey$kq17[i] <- as.numeric(2)}
+#   else if ((str_detect(survey$Q17[i], "Cropland runoff"))){
+#       survey$kq17[i] <- as.numeric(2)}
+#   else if ((str_detect(survey$Q17[i], "Application of fertilizers"))){
+#       survey$kq17[i] <- as.numeric(1)}
+#   else {
+#     survey$kq17[i] <- as.numeric(0)}
+# }
+
+# # Question 17 Knowledge
+# q17 <- survey %>% 
+#   drop_na(Q14_1) %>%
+#   group_by(Q14_1 , Q17 ) %>%
+#   summarize(count = n())
+# q17
+# 
+# ggplot(q17, aes(Q14_1, count, fill = Q17)) + geom_bar(stat = 'identity', position = "dodge")
+# 
+# # Question 13 and 17 summary
+# # Summary of knowledge including the knowledge questions and also the participants ranking of their own knowledge 
+# q13_17 <- survey %>% 
+#   drop_na(Q14_1) %>%
+#   group_by(Q14_1 , Q17 , Q13) %>%
+#   summarize(count = n())
+# q13_17
+# 
+```
+
+
+
+## Q15 function for multiple points for knowledge 
+```{r}
+# Function for assigning a knowledge value for Q15
+q15 <- function(survey){
+  
+  # Assign knowledge Value for question Q15 for the algae blooms
+  for (i in 1:nrow(survey)){
+    if ((str_detect(survey$Q15[i], "Algae blooms"))){
+      survey$kq15_1[i] <- as.numeric(1)}
+    else {
+      survey$kq15_1[i] <- as.numeric(0)}
+  }
+  
+  
+  # Loops for the correct values for the lesser point question values 
+  for (i in 1:nrow(survey)){
+    if ((str_detect(survey$Q15[i], "Death of fish and other aquatic life"))){
+      survey$k1[i] <- as.numeric(.25)}
+    else {
+      survey$k1[i] <- as.numeric(0)}
+  }
+  
+  for (i in 1:nrow(survey)){
+    if ((str_detect(survey$Q15[i], "Eutrophication"))){
+      survey$k2[i] <- as.numeric(.25)}
+    else {
+      survey$k2[i] <- as.numeric(0)}
+  }
+  
+  for (i in 1:nrow(survey)){
+    if ((str_detect(survey$Q15[i], "Toxic drinking water"))){
+      survey$k3[i] <- as.numeric(.25)}
+    else {
+      survey$k3[i] <- as.numeric(0)}
+  }
+  
+  for (i in 1:nrow(survey)){
+    if ((str_detect(survey$Q15[i], "Skin rashes with contact"))){
+      survey$k4[i] <- as.numeric(.25)}
+    else {
+      survey$k4[i] <- as.numeric(0)}
+  }
+  
+  # For loops for the incorrect answers 
+  for (i in 1:nrow(survey)){
+    if ((str_detect(survey$Q15[i], "Flooding"))){
+      survey$k5[i] <- as.numeric(-.25)}
+    else {
+      survey$k5[i] <- as.numeric(0)}
+  }
+  
+  for (i in 1:nrow(survey)){
+    if ((str_detect(survey$Q15[i], "Waterborne pathogens"))){
+      survey$k6[i] <- as.numeric(-.25)}
+    else {
+      survey$k6[i] <- as.numeric(0)}
+  }
+  
+  for (i in 1:nrow(survey)){
+    if ((str_detect(survey$Q15[i], "Disease from consumption"))){
+      survey$k7[i] <- as.numeric(-.25)}
+    else {
+      survey$k7[i] <- as.numeric(0)}
+  }
+  
+  for (i in 1:nrow(survey)){
+    if ((str_detect(survey$Q15[i], "Heavy Metal Contamination"))){
+      survey$k8[i] <- as.numeric(-.25)}
+    else {
+      survey$k8[i] <- as.numeric(0)}
+  }
+
+  survey$kq15 <- as.numeric(survey$kq15_1 + survey$k1 + survey$k2 + survey$k3 + survey$k4 + survey$k5 + survey$k6 + survey$k7 + survey$k8)
+  survey <- select(survey, -c("k1":"k8", "kq15_1"))
+  return(survey)
+}
+survey <- q15(survey)
+
+```
+
+
+
+## Old knowledge levels, using 3 categories 
+```{r Old knowledge levels (3 categories)}
+# survey$knowledge <- as.numeric((survey$kq13 + survey$kq15 + survey$kq17)/2)
+# 
+# survey$know[survey$know <= 1] <- "No previous knowledge"
+# survey$know[survey$know <= 2.5 & survey$know > 1] <- "Some knowledge"
+# survey$know[survey$know <= 3 & survey$know > 2.5] <- "Previous knowledge"
+
+# # How many participants with previous knowledge 
+# # 35 with knowledge, 201 with some knowledge, and 328 with no knowledge 
+# know5 <- know3 %>% 
+#   group_by(knowledge) %>%
+#   summarize(total = sum(count))
+# know5
+
+
+# # Graphing the knowledge levels 
+# know4$Q14_1 <- as.factor(know4$Q14_1)
+# know4$knowledge <- as.factor(know4$knowledge)
+# 
+# library(plyr)
+# library(plyr)
+# know4$knowledge <- mapvalues(know4$knowledge, from = c(0,1, 2), to = c("No Previous Knowledge", "Some Previous Knowledge", "Previous Knowledge"))
+# 
+# 
+# # FIGURE 1. Knowledge comparison among participants 
+# ggplot(know4, aes(Q14_1, total, fill = k_no)) + 
+#   geom_bar(stat = "identity", position = "dodge") +
+#   labs(x = "Knowledge Rank by Participant", 
+#        fill = "Actual Knowledge Level", 
+#        y = "Responses") 
+```
+
+
+## Label knowledge level in the survey data 
+```{r}
+# Create empty columns to assign knowledge level (high, mod, low)
+survey$know1 <- NA
+survey$know2 <- NA
+
+# assign knowledge level for Q13
+for (i in 1:nrow(survey)){
+  if ((str_detect(survey$Q13[i], "Phosphorus"))){
+    survey$know1[i] <- as.numeric(1)
+  } else {
+    survey$know1[i] <- as.numeric(0)
+  }
+}
+
+survey$know2 <- as.numeric(0)
+
+# assign knowledge level for Q17
+for (i in 1:nrow(survey)){
+  if (str_detect(survey$Q17[i], "Erosion|Cropland runoff")){
+    survey$know2[i] <- as.numeric(1)}
+  else {
+    survey$know2[i] <- as.numeric(0)
+  }
+}
+
+# Knowledge for participants split into three levels: 0, 1, and 2 
+survey$knowledge <- as.numeric(survey$know1 + survey$know2)
+survey$know <- as.factor(survey$knowledge)
+
+
+low_know <- survey %>%
+  filter(knowledge == 0) %>%
+  summarise(count = n())
+low_know
+# 351 with no knowledge, 59% 
+
+
+```
