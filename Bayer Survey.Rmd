@@ -162,7 +162,7 @@ ggplot(data=subset(survey, !is.na(Q14_1)), aes(as.factor(Q14_1), fill = Q8)) +
 ``{r}
 # assign Farmer status 
 for (i in 1:nrow(survey)){
-  if (survey$Q20[i] == c("Producer/Farmer")){
+  if ((str_detect(survey$Q20[i], "Producer/Farmer"))){
     survey$Farmer[i] <- as.character("Yes")}
   else {
     survey$Farmer[i] <- as.character("No")
@@ -192,7 +192,7 @@ farmer_sum
 
 ggplot(farmer_sum, aes(Q2, count, fill = Farmer)) + geom_bar(stat = "identity", fun.y = "mean", position = "dodge")
 
-kruskal.test(Q2~Farmer, survey)
+kruskal.test(Farmer~Q2, survey)
 # Age is not a significantly affected by if the respondent is a farmer. 
 
 library(dplyr)
