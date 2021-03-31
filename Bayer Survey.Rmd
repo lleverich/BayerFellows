@@ -86,7 +86,7 @@ kruskal.test(Q14_1~knowledge, survey)
 # Significant both ways, but not a useful insight 
 
 # How many participants had previous knowledge (ACTUAL)
-# (0) 139, (1) 149, (2) 276 
+# (0) 149, (1) 276, (2) 139 
 act_know <- survey %>%
   drop_na(Q14_1) %>%
   group_by(knowledge) %>%
@@ -180,8 +180,8 @@ farmers
 qknow <- survey %>%
   group_by(know, Farmer) %>%
   summarize(count = n(), 
-            perc_farmer = (count/30)*100, 
-            perc_nofarmer = (count/567)*100)
+            perc_farmer = (count/60)*100, 
+            perc_nofarmer = (count/537)*100)
 qknow
 
 # Is Age statistically different between Farmers and not Farmers? 
@@ -201,12 +201,12 @@ detach(package:plyr, unload=TRUE)
 farmer_sum2 <- survey %>%
   group_by(knowledge, Farmer) %>%
   summarise(count = n(), 
-            perc_farm = (count/30)*100, 
-            perc_nonfarm = (count/567)*100)
+            perc_farm = (count/60)*100, 
+            perc_nonfarm = (count/537)*100)
 farmer_sum2
-# 30 farmers and 567 others 
-# Not a farmer Knowledge ranking: 0 knowledge: 26%, 1: 50%, 2:24% 
-# Farmer Knowledge: 0 knowledge: 53%, 1: 23%, 2: 23%
+# 60 farmers and 567 others 
+# Not a farmer Knowledge ranking: 0 knowledge: 26%, 1: 50%, 2:25% 
+# Farmer Knowledge: 0 knowledge: 41.7%, 1: 41.7%, 2: 16.7%
 # There is a significant difference in knowledge based on Farm background 
 
 dunnTest(know ~ Farmer,
@@ -219,12 +219,12 @@ kruskal.test(know~Farmer, survey)
 farmer_sum3 <- survey %>%
   group_by(Q13, Farmer) %>%
   summarise(count = n(), 
-            perc_farm = (count/30)*100, 
-            perc_nonfarm = (count/567)*100)
+            perc_farm = (count/60)*100, 
+            perc_nonfarm = (count/537)*100)
 farmer_sum3
 
 ggplot(farmer_sum3, aes(Q13, count, fill = Farmer)) + geom_bar(stat = "identity", position = "dodge")
-# 40% of the time, Farmers thought N was the major contributor to algae blooms, where only 23% of respondents identified P correctly. For non farmers, there was no clear consensus. 22% bacteria, 25% N, and 26% P (the remainder was pesticides and synthetic chemicals)
+# 40% of the time, Farmers thought N was the major contributor to algae blooms, where only 23% of respondents identified P correctly. For non farmers, there was no clear consensus. 21% bacteria, 25% N, and 27% P (the remainder was pesticides and synthetic chemicals)
 # While farmers did get it wrong more often, they often selected the other major pollutant, Nitrogen. 63.3% identified the top two pollutants for water (P and N), but failed to identify which affects freshwater sources. Where as the general public selected the two top pollutants (N and P) only half of the time (51%). 
 
 ```
@@ -297,6 +297,7 @@ wilcox.test(no_ag_back$know, ag_back$know)
 mean(no_ag_back$know)
 mean(ag_back$know)
 
+# TABLE FOR PAPER
 
 backgroundsum2 <- survey %>%
   drop_na(Q14_1) %>%
@@ -307,6 +308,10 @@ backgroundsum2 <- survey %>%
 backgroundsum2
 
 kruskal.test(Q14_1~Background, survey)
+dunnTest(Q14_1~Background, data = subset(survey, !is.na(Q14_1)))
+
+wilcox.test(survey$Q14_1, survey$Background, correct = FALSE, exact = FALSE)
+
 wilcox.test(no_ag_back$Q14_1, ag_back$Q14_1)
 
 # FIGURE FOR PAPER
@@ -316,6 +321,13 @@ ggplot(subset(survey, !is.na(Q14_1)), aes(Background, fill = as.factor(Q14_1))) 
        y = "Number of Respondents") +
   scale_x_discrete(labels=c("Ag" = "Affiliated", "NoAg" = "No Affiliation"))
 
+
+ggplot(subset(survey, !is.na(Q14_1)), aes(Q14_1, fill = as.factor(Background))) + geom_bar( position = "dodge")
+  
+  scale_fill_hue("Self Assigned\nKnowledge Ranking") +
+  labs(x = "Agricultural Affiliation", 
+       y = "Number of Respondents") +
+  scale_x_discrete(labels=c("Ag" = "Affiliated", "NoAg" = "No Affiliation"))
 
 ```
 
@@ -343,7 +355,9 @@ ggplot(survey, aes(Q2, fill = knowledge)) +
 age_know2 <- survey %>%
   group_by(Q2) %>%
   summarise(count = n(), 
-            mean = mean(know))
+            mean = mean(know), 
+            sd = sd(know), 
+            se = sd/count)
 age_know2
 
 # FIGURE FOR PAPER
@@ -352,7 +366,10 @@ ggplot(age_know2, aes(Q2, mean, fill = Q2)) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) + 
   scale_fill_hue("")+ 
   labs(x = "", 
-       y = "Average Knowledge Level")
+       y = "Average Knowledge Level") + 
+  geom_text(label= c("b", "a", "ab", "a", "a", "a", "a"),vjust=-1) + 
+  ylim(0, 1.2)
+  
 
 kruskal.test(know~Q2, survey)
 dunnTest(know~Q2, survey)
