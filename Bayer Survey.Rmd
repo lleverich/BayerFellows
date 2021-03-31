@@ -441,6 +441,14 @@ ggplot(drink, aes(Q9_1, count, fill = Background)) + geom_bar(position = "dodge"
 kruskal.test(Q9_1 ~ Q8, survey)
 dunnTest(Q9_1 ~ Q8, survey)
 
+drink2 <- survey %>%
+  group_by(Q9_1, Q8) %>%
+  summarise(mean = mean(Q9_1),
+            count = n())
+drink2
+
+ggplot(drink2, aes(Q9_1, count, fill = Q8)) + geom_bar(position = "dodge", stat = "summary", fun = "mean")
+
 # Concern about recreation 
 wilcox.test(ag_back$Q9_2, no_ag_back$Q9_2)
 # This is significantly difference 
@@ -454,6 +462,7 @@ ggplot(rec, aes(Q9_2, count, fill = Background)) + geom_bar(position = "dodge", 
 
 kruskal.test(Q9_2 ~ Q8, survey)
 
+
 # Concern about environment 
 wilcox.test(ag_back$Q9_3, no_ag_back$Q9_3)
 # This is also significantly different between the two groups 
@@ -465,6 +474,7 @@ envir
 
 ggplot(envir, aes(Q9_3, count, fill = Background)) + geom_bar(position = "dodge", stat = "summary", fun.y = "mean")
 
+#Rural vs urban did not matter 
 kruskal.test(Q9_3 ~ Q8, survey)
 
 ```
@@ -491,7 +501,14 @@ age_concern <- survey %>%
 age_concern
 
 
-ggplot(age, aes(Q9_3, count, fill = Q2)) + geom_bar(position = "dodge", stat = "summary", fun.y = "mean")
+ggplot(age_concern, aes(Q9_3, count, fill = Q2)) + geom_bar(position = "dodge", stat = "summary", fun = "mean")
+
+kruskal.test(Q9_3~Q2, survey)
+dunnTest(Q9_3~Q2, survey)
+
+q9 <- read.csv("C:\\Users\\lmlev\\iCloudDrive\\UMN\\Bayer Fellowship\\Q9_3.csv")
+q9$Q2 <- as.factor(q9$ï..Q2)
+ggplot(q9, aes(as.factor(Q9), perc, fill = Q2)) + geom_bar(position = "dodge", stat = "summary", fun = "mean") + geom_text(aes(label = perc), position = position_dodge(0.9), vjust = 2)
 
 # How did respondents grade their knowledge by age 
 age <- survey %>%
