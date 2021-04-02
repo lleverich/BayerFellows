@@ -169,6 +169,14 @@ for (i in 1:nrow(survey)){
   }
 }
 
+for (i in 1:nrow(survey)){
+  if ((survey$Q20[i] == "Producer/Farmer")){
+    survey$Farmer_only[i] <- as.character("Yes")}
+  else {
+    survey$Farmer_only[i] <- as.character("No")
+  }
+}
+
 survey$Farmer <- as.factor(survey$Farmer)
 
 farmers <- survey %>%
@@ -224,8 +232,20 @@ farmer_sum3 <- survey %>%
 farmer_sum3
 
 ggplot(farmer_sum3, aes(Q13, count, fill = Farmer)) + geom_bar(stat = "identity", position = "dodge")
+
+# FARMER AS SOLE OCCUPATION 
+
+farmer_sum4 <- survey %>%
+  group_by(Q13, Farmer_only) %>%
+  summarise(count = n(), 
+            perc_farm = (count/30)*100, 
+            perc_nonfarm = (count/537)*100)
+farmer_sum4
+
+
 # 40% of the time, Farmers thought N was the major contributor to algae blooms, where only 23% of respondents identified P correctly. For non farmers, there was no clear consensus. 21% bacteria, 25% N, and 27% P (the remainder was pesticides and synthetic chemicals)
 # While farmers did get it wrong more often, they often selected the other major pollutant, Nitrogen. 63.3% identified the top two pollutants for water (P and N), but failed to identify which affects freshwater sources. Where as the general public selected the two top pollutants (N and P) only half of the time (51%). 
+kruskal.test(know~Farmer_only, survey)
 
 ```
 
@@ -267,6 +287,16 @@ q13 <- survey %>%
             perc_ag = (count/114)*100, 
             perc_noag = (count/483)*100)
 q13
+
+detach("package:plyr", unload = TRUE)
+
+q13.2 <- survey %>%
+  drop_na(Q13) %>%
+  group_by(Q13, Background) %>%
+  summarize(count = n(), 
+            perc_ag = (count/114)*100, 
+            perc_noag = (count/483)*100)
+q13.2
 # 68% of those with an ag background got q13 wrong. 75% of those without an ag background got q13 wrong 
 
 q15 <- survey %>%
@@ -408,7 +438,8 @@ kruskal.test(Q12 ~ Q8, survey)
 ```{r}
 concern <- survey %>%
   group_by(Q9_3) %>%
-  summarise(count = n())
+  summarise(count = n(), 
+            perc = count/597 *100)
 concern
 ```
 
@@ -501,14 +532,18 @@ age_concern <- survey %>%
 age_concern
 
 
-ggplot(age_concern, aes(Q9_3, count, fill = Q2)) + geom_bar(position = "dodge", stat = "summary", fun = "mean")
+ggplot(age_concern, aes(Q9_3, count, fill = Q2)) + geom_bar(position = "dodge", width = 1, stat = "summary", fun = "mean")
 
 kruskal.test(Q9_3~Q2, survey)
 dunnTest(Q9_3~Q2, survey)
 
-q9 <- read.csv("C:\\Users\\lmlev\\iCloudDrive\\UMN\\Bayer Fellowship\\Q9_3.csv")
-q9$Q2 <- as.factor(q9$ï..Q2)
-ggplot(q9, aes(as.factor(Q9), perc, fill = Q2)) + geom_bar(position = "dodge", stat = "summary", fun = "mean") + geom_text(aes(label = perc), position = position_dodge(0.9), vjust = 2)
+q9 <- read.csv("C:\\Users\\lmlev\\iCloudDrive\\UMN\\Bayer Fellowship\\Q9_3.csv", fileEncoding = "UTF-8-BOM")
+
+ggplot(q9, aes(as.factor(Q9), perc, fill = Q2)) + 
+  geom_bar(position = position_dodge(width = 1), stat = "summary", fun = "mean", width = 1) +
+  geom_text(aes(label = perc), position = position_dodge(1), vjust = 1, size = 2.5) + 
+  labs(y = "Percentage of Respondents", x = "Level of Concern for Environmental Water") + 
+  scale_fill_hue("Age Group")
 
 # How did respondents grade their knowledge by age 
 age <- survey %>%
@@ -519,7 +554,7 @@ age
 
 
 age_know <- survey %>%
-  drop_na(Q14_1)
+  drop_na(Q14_1) %>%
   group_by(Q2, Q14_1) %>%
   summarize(count = n(),
             perc_18 = (count/118)*100,
@@ -532,7 +567,13 @@ age_know <- survey %>%
   )
 age_know
 
-ggplot(age_know, aes(Q14_1, count, fill = Q2)) + geom_bar(position = "dodge", stat = "summary", fun.y = "mean")
+# FIGURE FOR PAPER
+ggplot(age_know, aes(as.factor(Q14_1), count, fill = Q2)) + 
+  geom_bar(position = "dodge", stat = "summary", fun.y = "mean") +
+  scale_fill_hue("Age Group") +
+  labs(x = "Self Assigned Knowledge Ranking", 
+       y = "Number of Respondents")
+  
 
 
 
@@ -609,8 +650,9 @@ infoage
 
 info_age <- survey %>% 
   drop_na(Q19) %>%
-  group_by(Q2 , Q19 ) %>%
+  group_by(Q2 , Q19) %>%
   summarize(count = n(),
+            mean = mean(count),
             perc_18 = (count/126)*100,
             perc_25 = (count/104)*100, 
             perc_35 = (count/74)*100, 
@@ -620,6 +662,8 @@ info_age <- survey %>%
             perc_75 = (count/10)*100)
 info_age
 
+source_age = as.data.frame(info_age)
+source_age = source_age[-c(1, 8),]
 
 # create bar plot
 pie = ggplot(info_age, aes(x = Q19, y = count, fill = Q19)) +
@@ -628,7 +672,10 @@ pie = ggplot(info_age, aes(x = Q19, y = count, fill = Q19)) +
 
 pie
              
-ggplot(info_age, aes(Q19, count, fill = Q2)) + geom_bar(stat = 'identity', position = "dodge")
+ggplot(source_age, aes(Q19, count, fill = Q2)) + 
+  geom_bar(stat = 'identity', position = "dodge") +
+  labs(x = "Informational Source", y = "Number of Respondents") +
+  scale_fill_hue("Age Group")
 
 kruskal.test(Q19 ~ Q2, survey)
 dunnTest(Q19~Q2, survey)
